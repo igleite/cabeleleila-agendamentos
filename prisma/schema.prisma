@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @map("_id")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  email         String        @unique
+  password      String?
+  name          String?
+  emailVerified DateTime?
+  isAdmin       Boolean       @default(false)
+  sessions      Session[]
+  appointments  Appointment[]
+}
+
+model Session {
+  id        String   @id @map("_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  token     String   @unique
+  expires   DateTime
+  lastUsed  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  id        String   @id @map("_id")
+  createdAt DateTime @default(now())
+  token     String   @unique
+  email     String
+  expires   DateTime
+}
+
+model Service {
+  id        String   @id @map("_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  active    Boolean  @default(true)
+  name      String
+  price     Float
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
+
+model Appointment {
+  id        String   @id @map("_id")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  date      DateTime
+  services  String[]
+  total     Float
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  status    AppointmentStatus @default(PENDING)
+}
